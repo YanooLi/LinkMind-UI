@@ -70,7 +70,7 @@ export const api = {
   deleteMe: () => http.delete('/users/me'),
   deleteAllResources: () => http.delete('/users/me/resources'),
 
-  shorten: (body: { target_url: string; title?: string; ai_enabled: boolean }) => http.post<UrlItem>('/shorten/', body).then((r) => r.data),
+  shorten: (body: { target_url: string; title?: string; ai_enabled: boolean; custom_alias?: string }) => http.post<UrlItem>('/shorten/', body).then((r) => r.data),
   urlHistory: (p: { page?: number; limit?: number; sort?: 'created_at' | 'clicks'; order?: 'asc' | 'desc'; q?: string }) =>
     http.get<{ page: number; limit: number; total: number; urls: UrlItem[] }>('/urls/history', { params: p }).then((r) => r.data),
   getUrl: (code: string) => http.get<UrlItem>(`/urls/${code}`).then((r) => r.data),

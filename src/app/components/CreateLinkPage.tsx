@@ -4,12 +4,15 @@ import { Button } from './Button';
 import { PageHeader } from './PageHeader';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api, errorMessage } from '@/api/client';
+import { API_URL, api, errorMessage } from '@/api/client';
 import type { UrlItem } from '@/api/types';
 import { addUrl } from '@/store/resourcesSlice';
 import { useAppDispatch } from '@/store';
 import { analyticsPath, formatDate, stripScheme } from '../lib';
 import { copyText, riskOf, useAnalysis } from '../useAnalysis';
+
+const ALIAS = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,30}[A-Za-z0-9])?$/;
+const SHORT_HOST = new URL(API_URL).host;
 
 export function CreateLinkPage() {
   const [params] = useSearchParams();
@@ -17,6 +20,8 @@ export function CreateLinkPage() {
   const dispatch = useAppDispatch();
   const [destinationUrl, setDestinationUrl] = useState(params.get('url') ?? '');
   const [title, setTitle] = useState('');
+  const [alias, setAlias] = useState('');
+  const aliasOk = !alias || ALIAS.test(alias);
   const [enableAI, setEnableAI] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<UrlItem | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,11 +37,11 @@ export function CreateLinkPage() {
   }, [analysis?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateLink = async () => {
-    if (!destinationUrl.trim() || isGenerating) return;
+    if (!destinationUrl.trim() || isGenerating || !aliasOk) return;
     setIsGenerating(true);
     setError(null);
     try {
-      const created = await api.shorten({ target_url: destinationUrl.trim(), title: title.trim() || undefined, ai_enabled: enableAI });
+      const created = await api.shorten({ target_url: destinationUrl.trim(), title: title.trim() || undefined, ai_enabled: enableAI, custom_alias: alias.trim() || undefined });
       dispatch(addUrl(created));
       setGeneratedLink(created);
     } catch (e) {
@@ -56,6 +61,7 @@ export function CreateLinkPage() {
   const handleReset = () => {
     setDestinationUrl('');
     setTitle('');
+    setAlias('');
     setGeneratedLink(null);
     setError(null);
   };
@@ -157,6 +163,35 @@ export function CreateLinkPage() {
                   </p>
                 </div>
 
+                {/* Custom back-half */}
+                <div>
+                  <label htmlFor="alias" className="block font-['Inter',sans-serif] font-semibold text-[14px] text-[#1a1b22] mb-3">
+                    Custom back-half <span className="font-normal text-[#717182]">(Optional)</span>
+                  </label>
+                  <div className={`flex items-center bg-[#F8F9FC] border rounded-lg px-4 py-4 focus-within:bg-white transition-all ${aliasOk ? 'border-[rgba(0,0,0,0.1)] focus-within:border-[#2E4BC8]' : 'border-[#BA1A1A]'}`}>
+                    <span className="font-['Inter',sans-serif] text-[16px] text-[#717182] whitespace-nowrap">{SHORT_HOST}/</span>
+                    <input
+                      id="alias"
+                      type="text"
+                      placeholder="my-link"
+                      value={alias}
+                      maxLength={32}
+                      onChange={(e) => setAlias(e.target.value.trim())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCreateLink();
+                        }
+                      }}
+                      className="flex-1 min-w-0 bg-transparent outline-none font-['Inter',sans-serif] text-[16px] text-[#444653] placeholder:text-[#717182]"
+                    />
+                  </div>
+                  <p className={`font-['Inter',sans-serif] text-[12px] mt-2 ${aliasOk ? 'text-[#717182]' : 'text-[#BA1A1A]'}`}>
+                    {aliasOk
+                      ? 'Choose your own ending instead of a random code. Letters, numbers and dashes, up to 32 characters.'
+                      : 'Use only letters, numbers and dashes, and start and end with a letter or number.'}
+                  </p>
+                </div>
+
                 {/* Optional AI Analysis Toggle */}
                 <div className="bg-[#F8F9FC] rounded-lg p-4 border border-[rgba(0,0,0,0.1)]">
                   <div className="flex items-center justify-between">
@@ -203,7 +238,7 @@ export function CreateLinkPage() {
                   <Button
                     variant="primary"
                     onClick={handleCreateLink}
-                    disabled={!destinationUrl.trim() || isGenerating}
+                    disabled={!destinationUrl.trim() || isGenerating || !aliasOk}
                     className="flex items-center gap-2"
                   >
                     {isGenerating ? (
