@@ -21,13 +21,13 @@ export const login = createAsyncThunk('auth/login', async (p: { email: string; p
   }
 })
 
-export const register = createAsyncThunk('auth/register', async (p: { email: string; password: string }, { dispatch, rejectWithValue }) => {
+export const register = createAsyncThunk('auth/register', async (p: { email: string; password: string; invite?: string }, { dispatch, rejectWithValue }) => {
   try {
-    await api.register(p.email, p.password)
+    await api.register(p.email, p.password, p.invite)
   } catch (e) {
     return rejectWithValue(errorMessage(e))
   }
-  return dispatch(login(p)).unwrap()
+  return dispatch(login({ email: p.email, password: p.password })).unwrap()
 })
 
 export const loadMe = createAsyncThunk('auth/me', async (_, { rejectWithValue }) => {

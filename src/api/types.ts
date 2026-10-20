@@ -34,3 +34,9 @@ export interface LinkStats {
   daily: { day: string; clicks: number }[]
   top_referrers: { referrer: string; clicks: number }[]
 }
+
+export interface PublicConfig {
+  registration_requires_invite: boolean
+  demo_email: string | null
+  demo_password: string | null
+}

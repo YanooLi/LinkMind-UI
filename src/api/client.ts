@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios'
-import type { Link, LinkPage, LinkStats, RiskLevel, User } from './types'
+import type { Link, LinkPage, LinkStats, PublicConfig, RiskLevel, User } from './types'
 
 const TOKEN_KEY = 'linkmind.token'
 
@@ -30,7 +30,9 @@ export function errorMessage(err: unknown): string {
 }
 
 export const api = {
-  register: (email: string, password: string) => http.post<User>('/api/auth/register', { email, password }),
+  config: () => http.get<PublicConfig>('/api/auth/config'),
+  register: (email: string, password: string, invite_code?: string) =>
+    http.post<User>('/api/auth/register', { email, password, invite_code: invite_code || undefined }),
   login: (email: string, password: string) =>
     http.post<{ access_token: string }>('/api/auth/token', new URLSearchParams({ username: email, password })),
   me: () => http.get<User>('/api/auth/me'),

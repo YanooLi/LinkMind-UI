@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Check, Copy, ListPlus, Search, Trash2 } from 'lucide-react'
 import { Link as RouterLink } from 'react-router-dom'
+import { api } from '@/api/client'
 import type { RiskLevel } from '@/api/types'
 import { RiskBadge } from '@/components/RiskBadge'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,8 @@ function CopyButton({ text }: { text: string }) {
 export function DashboardPage() {
   const dispatch = useAppDispatch()
   const { items, nextCursor, loading, error, filter } = useAppSelector((s) => s.links)
+  const [isDemo, setIsDemo] = useState(false)
+  const email = useAppSelector((s) => s.auth.user?.email)
   const [url, setUrl] = useState('')
   const [alias, setAlias] = useState('')
   const [batchOpen, setBatchOpen] = useState(false)
@@ -30,6 +33,9 @@ export function DashboardPage() {
   const [query, setQuery] = useState(filter.q)
 
   useEffect(() => { dispatch(fetchLinks(false)) }, [dispatch, filter])
+  useEffect(() => {
+    api.config().then((r) => setIsDemo(!!email && r.data.demo_email === email)).catch(() => setIsDemo(false))
+  }, [email])
 
   // Analysis runs in a background worker; poll only while something is still pending.
   const hasPending = items.some((l) => l.status === 'pending')
@@ -58,7 +64,13 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      {isDemo && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          You are using the read-only demo account. Open any link to see its AI category, security analysis and
+          clicks; create your own account to shorten links.
+        </div>
+      )}
+      <Card className={isDemo ? 'pointer-events-none opacity-50' : undefined} aria-disabled={isDemo}>
         <CardHeader>
           <CardTitle>Shorten a link</CardTitle>
           <CardDescription>Every link is classified and checked for phishing/malware signals in the background.</CardDescription>
@@ -112,11 +124,13 @@ export function DashboardPage() {
               </div>
               <p className="truncate text-sm text-muted-foreground" title={l.original_url}>{l.title || l.original_url}</p>
             </div>
-            <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">{l.click_count} clicks</span>
+            <span className="shrink-0 text-right text-sm tabular-nums text-muted-foreground">{l.click_count} {l.click_count === 1 ? "click" : "clicks"}</span>
             <CopyButton text={l.short_url} />
-            <Button variant="ghost" size="icon" title="Delete" onClick={() => dispatch(deleteLink(l.id))}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {!isDemo && (
+              <Button variant="ghost" size="icon" title="Delete" onClick={() => dispatch(deleteLink(l.id))}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ))}
       </Card>
