@@ -153,7 +153,7 @@ export function CreateLinkPage() {
                     />
                   </div>
                   <p className="font-['Inter',sans-serif] text-[12px] text-[#717182] mt-2">
-                    Custom title for your link. If empty, we'll auto-generate one from the URL.
+                    A private label so you can find this link in All Resources and Analytics. It doesn't change the short URL. Leave it empty to use the page's own title.
                   </p>
                 </div>
 
