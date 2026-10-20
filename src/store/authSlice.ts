@@ -29,6 +29,7 @@ const authSlice = createSlice({
   reducers: {
     logout(state) { tokens.clear(); state.profile = null; state.loggedIn = false },
     setProfile(state, a: { payload: Profile }) { state.profile = a.payload },
+    clearError(state) { state.error = null; state.status = 'idle' },
   },
   extraReducers: (b) => {
     b.addCase(login.pending, (s) => { s.status = 'loading'; s.error = null })
@@ -41,5 +42,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { logout, setProfile } = authSlice.actions
+export const { logout, setProfile, clearError } = authSlice.actions
 export default authSlice.reducer

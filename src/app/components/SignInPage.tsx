@@ -4,7 +4,7 @@ import { Button } from './Button';
 import type { PageType } from '../routes';
 import { api } from '@/api/client';
 import type { PublicConfig } from '@/api/types';
-import { login, register } from '@/store/authSlice';
+import { clearError, login, register } from '@/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/store';
 
 interface SignInPageProps {
@@ -108,7 +108,12 @@ export function SignInPage({ onNavigate }: SignInPageProps) {
             <div>
               <label htmlFor="username" className={labelClass}>{mode === 'signin' ? 'Username or email' : 'Username'}</label>
               <input id="username" value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username"
+                pattern={mode === 'signup' ? '[A-Za-z0-9_.\\-]{3,32}' : undefined}
+                title={mode === 'signup' ? '3–32 letters, numbers, dots, dashes or underscores (no @)' : undefined}
                 placeholder={mode === 'signin' ? 'johndoe or user@linkmind.com' : 'johndoe'} className={inputClass} />
+              {mode === 'signup' && (
+                <p className="mt-1 font-['Inter',sans-serif] text-[12px] text-[#717182]">3–32 letters, numbers, dots, dashes or underscores. Not your email.</p>
+              )}
             </div>
             {mode === 'signup' && (
               <div>
@@ -127,6 +132,9 @@ export function SignInPage({ onNavigate }: SignInPageProps) {
               <div>
                 <label htmlFor="invite" className={labelClass}>Invite code</label>
                 <input id="invite" value={invite} onChange={(e) => setInvite(e.target.value)} required className={inputClass} />
+                <p className="mt-1 font-['Inter',sans-serif] text-[12px] text-[#717182]">
+                  Sign-up is invite-only to keep the shortener from being used for spam. No code? Try the read-only demo above.
+                </p>
               </div>
             )}
             {error && <p role="alert" className="font-['Inter',sans-serif] text-[14px] text-[#BA1A1A]">{error}</p>}
@@ -142,7 +150,7 @@ export function SignInPage({ onNavigate }: SignInPageProps) {
             {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
             <button
               type="button"
-              onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+              onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); dispatch(clearError()) }}
               className="text-[#2E4BC8] font-medium hover:underline"
             >
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
