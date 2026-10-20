@@ -3,15 +3,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// Dev server proxies the API so the browser talks to one origin (no CORS setup needed locally).
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': 'http://localhost:8000',
-      '/r': 'http://localhost:8000',
-    },
+// The UI was designed in Figma Make, which imports images as "figma:asset/<hash>.png"; serve them from src/assets.
+const figmaAssets = {
+  name: 'figma-assets',
+  resolveId(id: string) {
+    if (id.startsWith('figma:asset/')) return path.resolve(import.meta.dirname, 'src/assets', id.slice('figma:asset/'.length))
   },
+}
+
+export default defineConfig({
+  plugins: [figmaAssets, react(), tailwindcss()],
+  resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
+  server: { port: 5173 },
 })
